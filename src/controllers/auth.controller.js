@@ -18,11 +18,11 @@ export async function registerUser(req,res) {
          if(isUserAlreadyExist){
             return res.status(400).json({message:"User already exist"});
          }
-         const hashedPassword = await bcrypt.hash(password,10);
+         // const hashedPassword = await bcrypt.hash(password,10);
          const user = await UserModel.create({
             username,
             email,
-            password:hashedPassword,
+            password:password,                                            //hashedPassword,
             role
          })
          const token = jwt.sign({ 
@@ -59,7 +59,7 @@ export async function loginUser(req,res){
             message:"invaild credentials"
          })
       }
-      const isPasswordValid = await bcrypt.compare(password,user.password)
+      const isPasswordValid = password === user.password                          //await bcrypt.compare(password,user.password)
       if(!isPasswordValid){
          return res.status(401).json({
             message: "invaild credentials"

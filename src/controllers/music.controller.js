@@ -1,22 +1,10 @@
 import MusicModel from "../models/music.model.js";
-import jwt from "jsonwebtoken";
 import { uploadFile } from "../services/storage.service.js";
+import AlbumModel from "../models/album.model.js";
 
   
 export async function createMusic(req,res){
-    try{
-        // phele token nikalege  cookies m see jo cookies m savehoga login krte hue 
-        const token = req.cookies.token;
-        if(!token){
-            return res.status(401).json({message:"Unauthorized"})
-        }
-        // fr token verify krege 
-
-        const decodedToken = jwt.verify(token,process.env.JWT_SCERET)
-        // fr check krege ki role match horha hai ya nhi 
-        if(decodedToken.role !=="artist"){
-            return res.status(401).json({message:"you dont have permission to create music"})
-        }
+    
         
         const {title}=req.body;
         const file = req.file ;
@@ -31,7 +19,7 @@ export async function createMusic(req,res){
          const music= await MusicModel.create({
           uri:result.url,
           title,
-          artist:decodedToken.id,
+          artist:req.user.id,
          })
        res.status(201).json({message:"Music created successfully",music:{
          id:music._id,
@@ -39,12 +27,56 @@ export async function createMusic(req,res){
          uri:music.uri,
          artist:music.artist,
        }})
-        
+}
 
-    } catch(error){
-        console.log(error);
-        return res.status(500).json({message:"Internal server error"});
+export async function createAlbum(req,res){
+    
+        const {title,genre,releaseDate,musics}=req.body;
+        const file = req.file ;
+        if(!file){
+            return res.status(400).json({message:"Please upload an album cover"})
+        }
+        if(!title  || !genre || !releaseDate){
+            return res.status(400).json({message:"Please provide all the details"})
+        }
+                    const existingAlbum = await AlbumModel.findOne({ title });
+            if (existingAlbum) {
+                return res.status(400).json({ message: "Album with this title already exists" });
+            }
+        const result = await uploadFile(file.buffer.toString("base64"))
+
+        const album= await AlbumModel.create({
+          title,
+          artist:req.user.id,
+          genre,
+          releaseDate,
+          coverImage:result.url,
+          songs:musics
+          
+        })
+        res.status(201).json({message:"Album created successfully",album:{
+          id:album._id,
+          title:album.title,
+          artist:album.artist,
+          genre:album.genre,
+          releaseDate:album.releaseDate,
+          coverImage:album.coverImage,
+          songs: musics
+          
+        }}) 
+
+   
+}
+
+export async function getAllMusic(req,res){
+    try{
+        const music = await MusicModel.find().populate("artist","-password");
+         res.status(200).json({message:"Music fetched successfully",music})
+    }
+    catch(error){
+        console.log(error)
+        return res.status(500).json({message:"Internal server error"})
     }
 }
 
-export default {createMusic}
+

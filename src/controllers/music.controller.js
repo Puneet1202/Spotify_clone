@@ -70,7 +70,7 @@ export async function createAlbum(req,res){
 
 export async function getAllMusic(req,res){
     try{
-        const music = await MusicModel.find().populate("artist","-password");
+        const music = await MusicModel.find().populate("artist","-password -role -email -_id -__v");
          res.status(200).json({message:"Music fetched successfully",music})
     }
     catch(error){

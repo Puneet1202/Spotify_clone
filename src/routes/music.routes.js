@@ -10,9 +10,9 @@ const router = express.Router();
     storage:multer.memoryStorage(),
     limits:{fileSize:1024*1024*5},
  })
-router.post("/upload", authMiddleware,upload.single("music"),createMusic)
-router.post("/album",authMiddleware,upload.single("album"),createAlbum)
-router.get("/getall",getAllMusic)
+router.post("/upload", authMiddleware("artist"),upload.single("music"),createMusic)
+router.post("/album",authMiddleware("artist"),upload.single("album"),createAlbum)
+router.get("/getall",authMiddleware("user"),getAllMusic)
 
 
 
